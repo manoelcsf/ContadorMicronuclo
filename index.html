@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Contador de Células</title>
+    <style>
+        /* Estilos Gerais do iOS */
+        * { box-sizing: border-box; }
+        html, body { 
+            height: 100%; 
+            margin: 0; 
+            padding: 0; 
+            overflow: hidden; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            background-color: #f2f2f7; 
+            color: #1c1c1e; 
+            user-select: none; 
+            -webkit-user-select: none;
+        }
+
+        #app {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            padding: 15px;
+        }
+
+        h1 { 
+            text-align: center; 
+            font-size: 1.2rem; 
+            margin: 0 0 8px 0; 
+            text-transform: uppercase;
+        }
+
+        header { margin-bottom: 8px; }
+        input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #d1d1d6;
+            border-radius: 8px;
+            font-size: 1rem;
+            background-color: white;
+            text-align: center;
+        }
+        input[type="text"]:focus { outline: none; border-color: #007aff; }
+
+        .total-panel {
+            background-color: #e5e5ea;
+            padding: 8px;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1rem;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+        }
+        #display-total { color: #ff3b30; }
+
+        main {
+            flex: 1; 
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: repeat(3, 1fr); 
+            gap: 10px;
+            padding: 5px 0;
+        }
+
+        .counter-card {
+            background: white;
+            border-radius: 12px;
+            padding: 10px 5px; 
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            justify-content: center; 
+            align-items: center;
+            gap: 15px; 
+        }
+
+        .cell-name {
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-align: center;
+            text-transform: uppercase;
+            margin: 0;
+            word-wrap: break-word;
+        }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            justify-content: space-between; 
+            width: 100%; 
+            padding: 0 5px; 
+        }
+
+        .btn-minus, .btn-plus {
+            width: 42px; 
+            height: 42px;
+            border-radius: 50%;
+            border: none;
+            font-size: 1.4rem;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0; 
+            touch-action: manipulation;
+        }
+        .btn-minus { background-color: #f2f2f7; color: #8e8e93; }
+        .btn-minus:active { background-color: #e5e5ea; transform: scale(0.95); }
+
+        .btn-plus { background-color: #007aff; color: white; box-shadow: 0 2px 5px rgba(0,122,255,0.2); }
+        .btn-plus:active { background-color: #005bb5; transform: scale(0.95); }
+
+        .count-display {
+            font-size: 1.6rem;
+            font-weight: bold;
+            color: #333;
+            flex: 1; 
+            text-align: center;
+        }
+
+        footer {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin-top: auto; 
+        }
+
+        .btn-action {
+            flex: 1;
+            padding: 12px;
+            border-radius: 10px;
+            border: none;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-align: center;
+            text-transform: uppercase;
+        }
+        .btn-save { background-color: #34c759; color: white; } 
+        .btn-save:active { background-color: #248a3d; }
+
+        .btn-reset { background-color: #ff3b30; color: white; } 
+        .btn-reset:active { background-color: #d70015; }
+
+        @media print {
+            body { background: white; color: black; padding: 0; overflow: visible; height: auto; }
+            #app { height: auto; padding: 10px; }
+            h1 { font-size: 1.5rem; }
+            header input { border: none; padding: 0; font-size: 1.2rem; font-weight: bold; background: none; }
+            header input::placeholder { color: transparent; }
+            main { grid-template-rows: auto auto auto; gap: 5px; height: auto; display: block; }
+            .counter-card { box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; justify-content: flex-start; gap: 5px; margin-bottom: 10px;}
+            .controls { justify-content: center; }
+            .controls button { display: none; }
+            footer { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="app">
+        <h1>Ensaio de Micronúcleo</h1>
+        
+        <header>
+            <input type="text" id="nome-amostra" placeholder="Nome do Paciente / Amostra">
+        </header>
+
+        <div class="total-panel">
+            TOTAL DE CÉLULAS : <span id="display-total">0</span>
+        </div>
+        
+        <main id="counters">
+            </main>
+
+        <footer>
+            <button class="btn-action btn-save" onclick="salvarImpressao()">SALVAR/PDF</button>
+            <button class="btn-action btn-reset" onclick="resetarContadores()">ZERA CONTA</button>
+        </footer>
+    </div>
+
+    <script>
+        const categorias = [
+            { id: 'binucleada', nome: 'Bi-nucleada' }, // Nome alterado conforme solicitado!
+            { id: 'micronucleo', nome: 'Micronúcleo' },
+            { id: 'ponte', nome: 'Ponte' },
+            { id: 'broto', nome: 'Broto' },
+            { id: 'apoptose', nome: 'Apoptose' },
+            { id: 'necrose', nome: 'Necrose' }
+        ];
+
+        const contagens = {};
+        let totalGeral = 0;
+
+        function inicializar() {
+            const container = document.getElementById('counters');
+            categorias.forEach(cat => {
+                contagens[cat.id] = 0;
+                container.innerHTML += `
+                    <div class="counter-card">
+                        <p class="cell-name">${cat.nome}</p>
+                        <div class="controls">
+                            <button class="btn-minus" onclick="decrementar('${cat.id}')">-</button>
+                            <span class="count-display" id="display-${cat.id}">0</span>
+                            <button class="btn-plus" onclick="incrementar('${cat.id}')">+</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function incrementar(id) {
+            contagens[id]++;
+            totalGeral++;
+            atualizarTela(id);
+            vibrar();
+        }
+
+        function decrementar(id) {
+            if (contagens[id] > 0) {
+                contagens[id]--;
+                totalGeral--;
+                atualizarTela(id);
+                vibrar();
+            }
+        }
+
+        function atualizarTela(id) {
+            document.getElementById(`display-${id}`).innerText = contagens[id];
+            document.getElementById('display-total').innerText = totalGeral;
+        }
+
+        function vibrar() {
+            if (navigator.vibrate) {
+                navigator.vibrate(50);
+            }
+        }
+
+        function salvarImpressao() {
+            const nomeAmostra = document.getElementById('nome-amostra').value;
+            if (!nomeAmostra) {
+                if(!confirm("Você não digitou o nome do Paciente/Amostra. Deseja salvar mesmo assim?")) {
+                    return;
+                }
+            }
+            window.print(); 
+        }
+
+        function resetarContadores() {
+            if(confirm("Tem certeza que deseja zerar todas as contagens e limpar a amostra?")) {
+                totalGeral = 0;
+                document.getElementById('display-total').innerText = totalGeral;
+                document.getElementById('nome-amostra').value = "";
+                
+                categorias.forEach(cat => {
+                    contagens[cat.id] = 0;
+                    document.getElementById(`display-${cat.id}`).innerText = 0;
+                });
+            }
+        }
+
+        inicializar();
+    </script>
+
+</body>
+</html>
